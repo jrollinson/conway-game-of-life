@@ -2,10 +2,17 @@
 <html>
   <head>
     <title>Canvas Tester</title>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <canvas style="border: 1px solid black" width=600 height=400 id="canvas"></canvas>
+    <canvas width=600 height=400 id="canvas"></canvas>
+    <div id="controls">
+      <input onclick="next()" type="button" id="next" value="Next"></input>
+      <input onclick="play()" type="button" id="next" value="Play"></input>
+      <input onclick="pause()" type="button" id="next" value="Pause"></input>
+      <select id="starting-options"></select>
+      <input onclick="selectStart()" type="button" id="select-start" value="Select"></input>
+    </div>
     <script src="main.js"></script>
-    <input onclick="next()" type="button" id="next" value="Next"></input>
   </body>
 </html>

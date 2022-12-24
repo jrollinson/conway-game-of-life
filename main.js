@@ -1,22 +1,37 @@
 const canvas = document.getElementById("canvas");
+const controls = document.getElementById("controls");
+const select = document.getElementById("starting-options");
+
 const ctx = canvas.getContext("2d");
 
 const gridWidth = 30;
 const gridHeight = 20;
-let grid = [];
-for (let i = 0; i < gridHeight; i++) {
-    const row = [];
-    for (let j = 0; j < gridWidth; j++) {
-        row.push(false);
-    }
-    grid.push(row);
-}
 
-grid[0][1] = true;
-grid[1][2] = true;
-grid[2][0] = true;
-grid[2][1] = true;
-grid[2][2] = true;
+let isPlaying = false;
+
+function createGrid() {
+    const grid = [];
+    for (let i = 0; i < gridHeight; i++) {
+        const row = [];
+        for (let j = 0; j < gridWidth; j++) {
+            row.push(false);
+        }
+        grid.push(row);
+    }
+    return grid
+}
+let grid = createGrid();
+
+const startingOptions = {
+    "Empty": [],
+    "Glider": [
+        [0, 1],
+        [1, 2],
+        [2, 0],
+        [2, 1],
+        [2, 2]
+    ]
+};
 
 function drawGrid() {
     const tileWidth = canvas.width / gridWidth;
@@ -127,7 +142,44 @@ function step() {
     updateGrid();
     drawTiles();
 }
+function runAnimation() {
+    if (!isPlaying) {
+        return;
+    }
+    step();
+}
+setInterval(runAnimation, 250);
 
 function next() { step(); }
-drawTiles();
+function play() {
+    isPlaying = true;
+}
+function pause() {
+    isPlaying = false;
+}
+function populateList(e) {
+    console.log("Hello");
+}
+function selectStart() {
+    const name = select.value;
+    pause();
 
+    const newGrid = createGrid();
+    for (const coords of startingOptions[name]) {
+        newGrid[coords[1]][coords[0]] = true;
+    }
+    grid = newGrid;
+
+    drawTiles();
+}
+
+// Create the list of options and load button
+for (const name in startingOptions) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.innerHTML = name;
+    select.appendChild(opt);
+}
+
+
+drawTiles();
