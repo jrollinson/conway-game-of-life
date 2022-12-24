@@ -12,7 +12,6 @@ for (let i = 0; i < gridHeight; i++) {
     grid.push(row);
 }
 
-console.log(grid);
 grid[0][1] = true;
 grid[1][2] = true;
 grid[2][0] = true;
@@ -39,10 +38,10 @@ function drawTiles() {
     const tileWidth = canvas.width / gridWidth;
     const tileHeight = canvas.height / gridHeight;
 
-    for (let x = 0; x < grid.length; x++) {
-        const row = grid[x];
-        for (let y = 0; y < row.length; y++) {
-            if (row[y]) {
+    for (let y = 0; y < grid.length; y++) {
+        const row = grid[y];
+        for (let x = 0; x < row.length; x++) {
+            if (row[x]) {
                 ctx.fillRect(tileWidth * x, tileHeight * y, tileWidth, tileHeight);
             }
         }
@@ -95,7 +94,6 @@ function updateGrid() {
         for (let y = 0; y < row.length; y++) {
             let isAlive = row[y];
             let numAliveNeighbors = getNumAliveNeighbors(x, y);
-            console.log(x, y, isAlive, numAliveNeighbors);
             let newState;
             if (isAlive) {
                 newState = numAliveNeighbors == 2 || numAliveNeighbors == 3;
@@ -108,6 +106,22 @@ function updateGrid() {
     }
     grid = newGrid;
 }
+
+function canvasPixelsToGridCoords(x, y) {
+    const tileWidth = canvas.width / gridWidth;
+    const tileHeight = canvas.height / gridHeight;
+    return [Math.floor(x / tileWidth), Math.floor(y / tileHeight)];
+}
+
+canvas.addEventListener("click", (e) => {
+    const canvasX = e.clientX;
+    const canvasY = e.clientY;
+    const coords = canvasPixelsToGridCoords(canvasX, canvasY);
+    const gridX = coords[0];
+    const gridY = coords[1];
+    grid[gridY][gridX] = !grid[gridY][gridX];
+    drawTiles();
+});
 
 function step() {
     updateGrid();
