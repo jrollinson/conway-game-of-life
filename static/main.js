@@ -24,13 +24,13 @@ let grid = createGrid();
 
 const startingOptions = {
     "Empty": [],
-    "Glider": [
-        [0, 1],
-        [1, 2],
-        [2, 0],
-        [2, 1],
-        [2, 2]
-    ]
+    "Glider": [ [0, 1], [1, 2], [2, 0], [2, 1], [2, 2] ],
+    "Toad": [ [ 9, 7 ], [ 10, 7 ], [ 11, 7 ], [ 8, 8 ], [ 9, 8 ], [ 10, 8 ] ],
+    "Beacon": [ [ 11, 10 ], [ 12, 10 ], [ 11, 11 ], [ 12, 11 ], [ 13, 12 ], [ 14, 12 ], [ 13, 13 ], [ 14, 13 ] ],
+    "R-Pentomino": [ [ 15, 11 ], [ 16, 11 ], [ 14, 12 ], [ 15, 12 ], [ 15, 13 ] ],
+    "Diehard": [ [ 17, 11 ], [ 11, 12 ], [ 12, 12 ], [ 12, 13 ], [ 16, 13 ], [ 17, 13 ], [ 18, 13 ] ],
+    "Acorn": [ [ 12, 9 ], [ 14, 10 ], [ 11, 11 ], [ 12, 11 ], [ 15, 11 ], [ 16, 11 ], [ 17, 11 ] ],
+    "Gosper glider gun": [ [ 26, 2 ], [ 24, 3 ], [ 26, 3 ], [ 14, 4 ], [ 15, 4 ], [ 22, 4 ], [ 23, 4 ], [ 13, 5 ], [ 17, 5 ], [ 22, 5 ], [ 23, 5 ], [ 2, 6 ], [ 3, 6 ], [ 12, 6 ], [ 18, 6 ], [ 22, 6 ], [ 23, 6 ], [ 2, 7 ], [ 3, 7 ], [ 12, 7 ], [ 16, 7 ], [ 18, 7 ], [ 19, 7 ], [ 24, 7 ], [ 26, 7 ], [ 12, 8 ], [ 18, 8 ], [ 26, 8 ], [ 13, 9 ], [ 17, 9 ], [ 14, 10 ], [ 15, 10 ] ]
 };
 
 function drawGrid() {
@@ -158,9 +158,6 @@ function play() {
 function pause() {
     isPlaying = false;
 }
-function populateList(e) {
-    console.log("Hello");
-}
 function selectStart() {
     const name = select.value;
     pause();
@@ -172,6 +169,19 @@ function selectStart() {
     grid = newGrid;
 
     drawTiles();
+}
+
+function logCoords() {
+    result = [];
+    for (let y = 0; y < grid.length; y++) {
+        let row = grid[y];
+        for (let x= 0; x < row.length; x++) {
+            if (grid[y][x]) {
+                result.push([x, y]);
+            }
+        }
+    }
+    return result;
 }
 
 // Create the list of options and load button
