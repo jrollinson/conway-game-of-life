@@ -129,8 +129,9 @@ function canvasPixelsToGridCoords(x, y) {
 }
 
 canvas.addEventListener("click", (e) => {
-    const canvasX = e.clientX;
-    const canvasY = e.clientY;
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
     const coords = canvasPixelsToGridCoords(canvasX, canvasY);
     const gridX = coords[0];
     const gridY = coords[1];
