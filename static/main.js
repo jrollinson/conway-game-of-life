@@ -221,5 +221,9 @@ for (const name in startingOptions) {
     select.appendChild(opt);
 }
 
-
 draw();
+
+// Set up for flier
+select.value = "Gosper glider gun";
+selectStart();
+play();
