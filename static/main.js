@@ -112,10 +112,10 @@ function drawGrid() {
     const tileWidth = canvas.width / gridWidth;
     const tileHeight = canvas.height / gridHeight;
 
-    for (let i = 0; i < gridHeight; i++) {
+    for (let i = 1; i < gridHeight; i++) {
         ctx.fillRect(0, tileHeight * i, canvas.width, 1);
     }
-    for (let i = 0; i < gridWidth; i++) {
+    for (let i = 1; i < gridWidth; i++) {
         ctx.fillRect(tileWidth * i, 0, 1, canvas.height);
     }
     ctx.restore();
