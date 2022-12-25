@@ -6,7 +6,9 @@ const ctx = canvas.getContext("2d");
 
 const gridWidth = 120;
 const gridHeight = 80;
+let isPlaying = false;
 
+/** A simple point class */
 class Point {
     constructor(x, y) {
         this.x = x;
@@ -14,15 +16,23 @@ class Point {
     }
 }
 
+/** An infinite 2-dimensional grid of "pixels" that are
+ *  either alive of dead.
+ *
+ *  Data is stored in as a map of x coordinates -> the set of alive y coordinates.
+ *  The grid is mutable.
+ */
 class Grid {
     constructor() {
         this.tiles = new Map();
     }
     
+    /** Marks all pixels as dead. */
     clear() {
         this.tiles.clear();
     }
 
+    /** Sets the state of one pixel. */
     setState(point, isAlive) {
         let row = this.tiles.get(point.x);
         if (row === undefined) {
@@ -37,6 +47,7 @@ class Grid {
         }
     }
 
+    /** Sets a group of pixels in a given column as alive. */
     setAliveInColumn(x, ys) {
         let row = this.tiles.get(x);
         if (row === undefined) {
@@ -49,10 +60,12 @@ class Grid {
         }
     }
 
+    /** Toggles the state of a pixel. */
     toggleState(point) {
         this.setState(point, !this.isAlive(point));
     }
 
+    /** Returns a list of the alive points */
     getAlivePoints() {
         const result = [];
         for (const entry of this.tiles.entries()) {
@@ -65,6 +78,7 @@ class Grid {
         return result;
     }
 
+    /** Returns whether the given pixel is alive. */
     isAlive(point) {
         const row = this.tiles.get(point.x);
         return (
@@ -73,7 +87,10 @@ class Grid {
         );
     }
     
-    numAliveInRow(x, ys) {
+    /** Returns the number of the pixels in the given 
+     * column that match the y-coordinates that are alive.
+     */
+    numAliveInColumn(x, ys) {
         const row = this.tiles.get(x);
         if (row === undefined) {
             return 0;
@@ -89,35 +106,72 @@ class Grid {
     }
 }
 
+/** Code to support game of life */
 class GameOfLife {
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
+    constructor() {
         this.grid = new Grid();
     }
 
+    /** Clears the grid of alive pieces */
     clear() {
         this.grid.clear();
     }
 
+    /** Counds the number of alive neighbors a point has. */
     numAliveNeighbors(point) {
         return (
-            this.grid.numAliveInRow(point.x - 1, [point.y - 1, point.y, point.y + 1]) +
-            this.grid.numAliveInRow(point.x, [point.y - 1, point.y + 1]) +
-            this.grid.numAliveInRow(point.x + 1, [point.y - 1, point.y, point.y + 1])
+            this.grid.numAliveInColumn(point.x - 1, [point.y - 1, point.y, point.y + 1]) +
+            this.grid.numAliveInColumn(point.x, [point.y - 1, point.y + 1]) +
+            this.grid.numAliveInColumn(point.x + 1, [point.y - 1, point.y, point.y + 1])
         );
     }
 
+    /** Adds the points to the grid. */
     addAlivePoints(points) {
         for (const point of points) {
             this.grid.setState(point, true);
         }
     }
+
+    /** Performs a step. */
+    update() {
+        const grid = new Grid();
+        for (const entry of this.grid.tiles.entries()) {
+            const x = entry[0];
+            const ys = entry[1];
+
+            const ysToCheck = new Set();
+            for (const y of ys) {
+                ysToCheck.add(y-1);
+                ysToCheck.add(y);
+                ysToCheck.add(y+1);
+            }
+
+            grid.setAliveInColumn(x-1, ysToCheck);
+            grid.setAliveInColumn(x, ysToCheck);
+            grid.setAliveInColumn(x+1, ysToCheck);
+        }
+        
+        const newGrid = new Grid();
+        for (const point of grid.getAlivePoints()) {
+            const numAliveNeighbors = this.numAliveNeighbors(point);
+            let aliveNext;
+            if (this.grid.isAlive(point)) {
+                aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
+            } else {
+                aliveNext = numAliveNeighbors == 3;
+            }
+            if (aliveNext) {
+                newGrid.setState(point, true);
+            }
+        }
+
+        gol.grid = newGrid;
+    }
 }
 
-const gol = new GameOfLife(gridWidth, gridHeight);
+const gol = new GameOfLife();
 
-let isPlaying = false;
 
 const startingOptions = {
     "Empty": [],
@@ -165,39 +219,6 @@ function draw() {
 }
 
 
-function updateGrid() {
-    const grid = new Grid();
-    for (const entry of gol.grid.tiles.entries()) {
-        const x = entry[0];
-        const ys = entry[1];
-
-        const ysToCheck = new Set();
-        for (const y of ys) {
-            ysToCheck.add(y-1);
-            ysToCheck.add(y);
-            ysToCheck.add(y+1);
-        }
-        grid.setAliveInColumn(x-1, ysToCheck);
-        grid.setAliveInColumn(x, ysToCheck);
-        grid.setAliveInColumn(x+1, ysToCheck);
-    }
-    
-    const newGrid = new Grid();
-    for (const point of grid.getAlivePoints()) {
-        const numAliveNeighbors = gol.numAliveNeighbors(point);
-        let aliveNext;
-        if (gol.grid.isAlive(point)) {
-            aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
-        } else {
-            aliveNext = numAliveNeighbors == 3;
-        }
-        if (aliveNext) {
-            newGrid.setState(point, true);
-        }
-    }
-
-    gol.grid = newGrid;
-}
 
 function canvasPixelsToGridCoords(x, y) {
     const tileWidth = canvas.width / gridWidth;
@@ -217,7 +238,7 @@ canvas.addEventListener("click", (e) => {
 });
 
 function step() {
-    updateGrid();
+    gol.update();
     draw();
 }
 function runAnimation() {
@@ -239,7 +260,7 @@ function selectStart() {
     const name = select.value;
     pause();
 
-    gol.clear();
+    gol.grid.clear();
     let points = [];
     for (const coords of startingOptions[name]) {
         points.push(new Point(coords[0], coords[1]));
