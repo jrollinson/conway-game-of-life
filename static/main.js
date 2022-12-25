@@ -7,20 +7,93 @@ const ctx = canvas.getContext("2d");
 const gridWidth = 30;
 const gridHeight = 20;
 
-let isPlaying = false;
-
-function createGrid() {
-    const grid = [];
-    for (let i = 0; i < gridHeight; i++) {
-        const row = [];
-        for (let j = 0; j < gridWidth; j++) {
-            row.push(false);
-        }
-        grid.push(row);
+class Point {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
     }
-    return grid
 }
-let grid = createGrid();
+
+function getNeighboringPoints(point) {
+    const x = point.x;
+    const y = point.y;
+    return [
+        new Point(x-1, y-1),
+        new Point(x-1, y),
+        new Point(x-1, y+1),
+        new Point(x, y-1),
+        new Point(x, y+1),
+        new Point(x+1, y-1),
+        new Point(x+1, y),
+        new Point(x+1, y+1)
+    ];
+}
+
+class GameOfLife {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.aliveTiles = [];
+    }
+
+    clear() {
+        this.aliveTiles = [];
+    }
+
+    getIsAlivePointIndex(point) {
+        return this.aliveTiles.find(elem => this.eq(elem, point));
+    }
+
+    getAlivePoints() {
+        return Array.from(this.aliveTiles);
+    }
+
+    isAlive(point) {
+        return this.getIsAlivePointIndex(point) !== undefined;
+    }
+
+    eq(pointa, pointb) {
+        return pointa.x === pointb.x && pointa.y === pointb.y;
+    }
+
+    setState(point, isAlive) {
+        const index = this.getIsAlivePointIndex(point);
+        if ((index !== undefined) === isAlive) {
+            return;
+        }
+
+        if (isAlive) {
+            this.aliveTiles.push(point);
+        } else {
+            this.aliveTiles = this.aliveTiles.filter(item => !this.eq(item, point));
+        }
+    }
+
+    toggleState(point) {
+        this.setState(point, !this.isAlive(point));
+    }
+
+    numAliveNeighbors(point) {
+        let result = 0;
+        for (const neighborPoint of getNeighboringPoints(point)) {
+            if (this.isAlive(neighborPoint)) {
+                result += 1;
+            }
+        }
+        return result;
+    }
+
+    addAlivePoints(points) {
+        for (const point of points) {
+            this.setState(point, true);
+        }
+    }
+
+}
+
+const gol = new GameOfLife(gridWidth, gridHeight);
+
+let isPlaying = false;
 
 const startingOptions = {
     "Empty": [],
@@ -34,6 +107,8 @@ const startingOptions = {
 };
 
 function drawGrid() {
+    ctx.save();
+    ctx.fillStyle = "gray";
     const tileWidth = canvas.width / gridWidth;
     const tileHeight = canvas.height / gridHeight;
 
@@ -43,83 +118,49 @@ function drawGrid() {
     for (let i = 0; i < gridWidth; i++) {
         ctx.fillRect(tileWidth * i, 0, 1, canvas.height);
     }
+    ctx.restore();
 }
 
-function drawTiles() {
+function draw() {
     ctx.fillStyle = "black";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawGrid();
     const tileWidth = canvas.width / gridWidth;
     const tileHeight = canvas.height / gridHeight;
-
-    for (let y = 0; y < grid.length; y++) {
-        const row = grid[y];
-        for (let x = 0; x < row.length; x++) {
-            if (row[x]) {
-                ctx.fillRect(tileWidth * x, tileHeight * y, tileWidth, tileHeight);
-            }
-        }
+    for (const point of gol.getAlivePoints()) {
+        ctx.fillRect(tileWidth * point.x, tileHeight * point.y, tileWidth, tileHeight);
     }
+
+    drawGrid();
 }
 
+
 function updateGrid() {
-    function getNeighbors(x, y) {
-        const allNeighbors = [
-            [x-1, y-1],
-            [x-1, y],
-            [x-1, y+1],
-            [x, y-1],
-            [x, y+1],
-            [x+1, y-1],
-            [x+1, y],
-            [x+1, y+1]
-        ];
-
-        const result = []
-        for (neighbor of allNeighbors) {
-            const isGood = (
-                neighbor[0] >= 0 && neighbor[0] <= gridHeight - 1 &&
-                neighbor[1] >= 0 && neighbor[1] <= gridWidth - 1
-            );
-            if (isGood) {
-                result.push(neighbor);
-            }
+    let toCheck = [];
+    for (const point of gol.getAlivePoints()) {
+        toCheck.push(point);
+        for (const neighboringPoint of getNeighboringPoints(point)) {
+            toCheck.push(neighboringPoint);
         }
+    }
+    toCheck = toCheck.filter((v, i, a) => a.indexOf(v) === i);
 
-        return result;
+    const newAlivePoints = [];
+    for (const point of toCheck.values()) {
+        const numAliveNeighbors = gol.numAliveNeighbors(point);
+        let aliveNext;
+        if (gol.isAlive(point)) {
+            aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
+        } else {
+            aliveNext = numAliveNeighbors == 3;
+        }
+        if (aliveNext) {
+            newAlivePoints.push(point);
+        }
     }
 
-    function getNumAliveNeighbors(x, y) {
-        let result = 0;
-        let neighbors = getNeighbors(x, y);
-        for (const neighbor of neighbors) {
-            if (grid[neighbor[0]][neighbor[1]]) {
-                result += 1;
-            }
-        }
-        return result;
-    }
-
-
-    let newGrid = []
-    for (let x = 0; x < grid.length; x++) {
-        let newRow = []
-        let row = grid[x];
-        for (let y = 0; y < row.length; y++) {
-            let isAlive = row[y];
-            let numAliveNeighbors = getNumAliveNeighbors(x, y);
-            let newState;
-            if (isAlive) {
-                newState = numAliveNeighbors == 2 || numAliveNeighbors == 3;
-            } else {
-                newState = numAliveNeighbors == 3;
-            }
-            newRow.push(newState)
-        }
-        newGrid.push(newRow);
-    }
-    grid = newGrid;
+    gol.clear();
+    gol.addAlivePoints(newAlivePoints);
 }
 
 function canvasPixelsToGridCoords(x, y) {
@@ -135,13 +176,13 @@ canvas.addEventListener("click", (e) => {
     const coords = canvasPixelsToGridCoords(canvasX, canvasY);
     const gridX = coords[0];
     const gridY = coords[1];
-    grid[gridY][gridX] = !grid[gridY][gridX];
-    drawTiles();
+    gol.toggleState(new Point(gridX, gridY));
+    draw();
 });
 
 function step() {
     updateGrid();
-    drawTiles();
+    draw();
 }
 function runAnimation() {
     if (!isPlaying) {
@@ -149,7 +190,7 @@ function runAnimation() {
     }
     step();
 }
-setInterval(runAnimation, 250);
+setInterval(runAnimation, 100);
 
 function next() { step(); }
 function play() {
@@ -162,26 +203,14 @@ function selectStart() {
     const name = select.value;
     pause();
 
-    const newGrid = createGrid();
+    gol.clear();
+    let points = [];
     for (const coords of startingOptions[name]) {
-        newGrid[coords[1]][coords[0]] = true;
+        points.push(new Point(coords[0], coords[1]));
     }
-    grid = newGrid;
+    gol.addAlivePoints(points);
 
-    drawTiles();
-}
-
-function logCoords() {
-    result = [];
-    for (let y = 0; y < grid.length; y++) {
-        let row = grid[y];
-        for (let x= 0; x < row.length; x++) {
-            if (grid[y][x]) {
-                result.push([x, y]);
-            }
-        }
-    }
-    return result;
+    draw();
 }
 
 // Create the list of options and load button
@@ -193,4 +222,4 @@ for (const name in startingOptions) {
 }
 
 
-drawTiles();
+draw();
