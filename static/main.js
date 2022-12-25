@@ -4,8 +4,8 @@ const select = document.getElementById("starting-options");
 
 const ctx = canvas.getContext("2d");
 
-const gridWidth = 60;
-const gridHeight = 40;
+const gridWidth = 120;
+const gridHeight = 80;
 
 class Point {
     constructor(x, y) {
@@ -29,46 +29,20 @@ function getNeighboringPoints(point) {
     ];
 }
 
-class GameOfLife {
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.aliveTilesMap = new Map();
+class Grid {
+    constructor() {
+        this.tiles = new Map();
     }
-
+    
     clear() {
-        this.aliveTilesMap.clear();
-    }
-
-    getAlivePoints() {
-        const result = [];
-        for (const entry of this.aliveTilesMap.entries()) {
-            const x = entry[0];
-            const row = entry[1];
-            for (const y of row.values()) {
-                result.push(new Point(x, y));
-            }
-        }
-        return result;
-    }
-
-    isAlive(point) {
-        const row = this.aliveTilesMap.get(point.x);
-        return (
-            row !== undefined &&
-            row.has(point.y)
-        );
-    }
-
-    eq(pointa, pointb) {
-        return pointa.x === pointb.x && pointa.y === pointb.y;
+        this.tiles.clear();
     }
 
     setState(point, isAlive) {
-        let row = this.aliveTilesMap.get(point.x);
+        let row = this.tiles.get(point.x);
         if (row === undefined) {
             row = new Set();
-            this.aliveTilesMap.set(point.x, row);
+            this.tiles.set(point.x, row);
         }
 
         if (isAlive) {
@@ -82,10 +56,42 @@ class GameOfLife {
         this.setState(point, !this.isAlive(point));
     }
 
+    getAlivePoints() {
+        const result = [];
+        for (const entry of this.tiles.entries()) {
+            const x = entry[0];
+            const row = entry[1];
+            for (const y of row.values()) {
+                result.push(new Point(x, y));
+            }
+        }
+        return result;
+    }
+
+    isAlive(point) {
+        const row = this.tiles.get(point.x);
+        return (
+            row !== undefined &&
+            row.has(point.y)
+        );
+    }
+}
+
+class GameOfLife {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.grid = new Grid();
+    }
+
+    clear() {
+        this.grid.clear();
+    }
+
     numAliveNeighbors(point) {
         let result = 0;
         for (const neighborPoint of getNeighboringPoints(point)) {
-            if (this.isAlive(neighborPoint)) {
+            if (this.grid.isAlive(neighborPoint)) {
                 result += 1;
             }
         }
@@ -94,10 +100,9 @@ class GameOfLife {
 
     addAlivePoints(points) {
         for (const point of points) {
-            this.setState(point, true);
+            this.grid.setState(point, true);
         }
     }
-
 }
 
 const gol = new GameOfLife(gridWidth, gridHeight);
@@ -140,7 +145,7 @@ function draw() {
 
     const tileWidth = canvas.width / gridWidth;
     const tileHeight = canvas.height / gridHeight;
-    for (const point of gol.getAlivePoints()) {
+    for (const point of gol.grid.getAlivePoints()) {
         if (point.x > 0 && point.x < gridWidth && point.y > 0 && point.y < gridHeight) {
             ctx.fillRect(tileWidth * point.x, tileHeight * point.y, tileWidth, tileHeight);
         }
@@ -152,7 +157,7 @@ function draw() {
 
 function updateGrid() {
     let toCheck = [];
-    for (const point of gol.getAlivePoints()) {
+    for (const point of gol.grid.getAlivePoints()) {
         toCheck.push(point);
         for (const neighboringPoint of getNeighboringPoints(point)) {
             toCheck.push(neighboringPoint);
@@ -164,7 +169,7 @@ function updateGrid() {
     for (const point of toCheck.values()) {
         const numAliveNeighbors = gol.numAliveNeighbors(point);
         let aliveNext;
-        if (gol.isAlive(point)) {
+        if (gol.grid.isAlive(point)) {
             aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
         } else {
             aliveNext = numAliveNeighbors == 3;
@@ -174,7 +179,7 @@ function updateGrid() {
         }
     }
 
-    gol.clear();
+    gol.grid.clear();
     gol.addAlivePoints(newAlivePoints);
 }
 
@@ -205,7 +210,7 @@ function runAnimation() {
     }
     step();
 }
-setInterval(runAnimation, 100);
+setInterval(runAnimation, 10);
 
 function next() { step(); }
 function play() {
