@@ -238,10 +238,13 @@ class GridView {
 
 
 class Controller {
-    constructor(gol, view) {
+    constructor(gol, view, startingInterval) {
         this.gol = gol;
         this.view = view;
         this.isPlaying = false;
+        this.interval = startingInterval
+        this.lastRun = new Date().getTime();
+        window.requestAnimationFrame(() => this.runAnimation());
     }
 
     draw() {
@@ -254,10 +257,14 @@ class Controller {
     }
 
     runAnimation() {
-        if (!this.isPlaying) {
-            return;
+        if (this.isPlaying) {
+            const now = new Date().getTime();
+            if (now > (this.lastRun + this.interval)) {
+                this.step();
+                this.lastRun = now;
+            }
         }
-        this.step();
+        window.requestAnimationFrame(() => this.runAnimation());
     }
 
     play() { this.isPlaying = true; }
@@ -266,10 +273,10 @@ class Controller {
 
 ctrl = new Controller(
     new GameOfLife(),
-    new GridView(canvas)
+    new GridView(canvas),
+    100
 );
 
-setInterval(() => ctrl.runAnimation(), 10);
 
 const next = () => ctrl.step();
 const play = () => ctrl.play();
@@ -290,14 +297,16 @@ function selectStart() {
 }
 
 // Create the list of options and load button
-for (const name in startingOptions) {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.innerHTML = name;
-    select.appendChild(opt);
+function buildStartingOptionsList() {
+    for (const name in startingOptions) {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.innerHTML = name;
+        select.appendChild(opt);
+    }
 }
 
-ctrl.draw();
+buildStartingOptionsList();
 
 // Set up for flier
 select.value = "Gosper glider gun";
