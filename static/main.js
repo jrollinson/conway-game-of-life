@@ -1,5 +1,6 @@
 const canvas = document.getElementById("canvas");
 const select = document.getElementById("starting-options");
+const speedElem = document.getElementById("speed");
 
 const gridWidth = 120;
 const gridHeight = 80;
@@ -305,8 +306,13 @@ function buildStartingOptionsList() {
         select.appendChild(opt);
     }
 }
-
 buildStartingOptionsList();
+
+speedElem.addEventListener('change', (e) => {
+    ctrl.interval = 1000 / parseInt(e.target.value);
+});
+
+speedElem.value = 1000 / ctrl.interval;
 
 // Set up for flier
 select.value = "Gosper glider gun";
