@@ -5,14 +5,23 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
+    <h1>Conway's Game of Life</h1>
+    <p>A quick implementation of <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"target="_blank" rel="noopener noreferrer">Conway's Game of Life</a>.<p>
     <canvas width=600 height=400 id="canvas"></canvas>
     <div id="controls">
-      <input onclick="next()" type="button" id="next" value="Next"></input>
+      <input onclick="next()" type="button" id="next" value="Next Step"></input>
       <input onclick="play()" type="button" id="next" value="Play"></input>
       <input onclick="pause()" type="button" id="next" value="Pause"></input>
+      <br />
       <select id="starting-options"></select>
       <input onclick="selectStart()" type="button" id="select-start" value="Select"></input>
     </div>
+    <h2>Rules!</h2>
+    <ul>
+      <li>An <strong>alive</strong> tile stays alive if it has either 2 or 3 alive neighbors.</li>
+      <li>A <strong>dead</strong> becomes alive if it has 3 alive neighbors.</li>
+    </ul>
+    <p>Neighbors are defined as the 8 tiles surrounding a tile.</p>
     <script src="main.js"></script>
   </body>
 </html>

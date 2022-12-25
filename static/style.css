@@ -3,3 +3,7 @@
     margin: 10px;
     display: block;
 }
+
+#controls input {
+    margin: 2px;
+}
