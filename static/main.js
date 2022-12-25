@@ -4,8 +4,8 @@ const select = document.getElementById("starting-options");
 
 const ctx = canvas.getContext("2d");
 
-const gridWidth = 30;
-const gridHeight = 20;
+const gridWidth = 60;
+const gridHeight = 40;
 
 class Point {
     constructor(x, y) {
