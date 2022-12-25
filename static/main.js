@@ -196,8 +196,7 @@ canvas.addEventListener("click", (e) => {
     const coords = canvasPixelsToGridCoords(canvasX, canvasY);
     const gridX = coords[0];
     const gridY = coords[1];
-    gol.toggleState(new Point(gridX, gridY));
-    draw();
+    ctrl.toggle(new Point(gridX, gridY));
 });
 
 class GridView {
@@ -249,6 +248,11 @@ class Controller {
     }
 
     draw() {
+        this.view.draw(this.gol);
+    }
+
+    toggle(point) {
+        this.gol.grid.toggleState(point);
         this.view.draw(this.gol);
     }
 
