@@ -275,7 +275,7 @@ class Controller {
 ctrl = new Controller(
     new GameOfLife(),
     new GridView(canvas),
-    100
+    20
 );
 
 
