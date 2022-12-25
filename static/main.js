@@ -1,12 +1,8 @@
 const canvas = document.getElementById("canvas");
-const controls = document.getElementById("controls");
 const select = document.getElementById("starting-options");
-
-const ctx = canvas.getContext("2d");
 
 const gridWidth = 120;
 const gridHeight = 80;
-let isPlaying = false;
 
 /** A simple point class */
 class Point {
@@ -165,12 +161,9 @@ class GameOfLife {
                 newGrid.setState(point, true);
             }
         }
-
-        gol.grid = newGrid;
+        this.grid = newGrid;
     }
 }
-
-const gol = new GameOfLife();
 
 
 const startingOptions = {
@@ -187,37 +180,6 @@ const startingOptions = {
     "Thin Brick Layer": [ [ 15, 20 ], [ 16, 20 ], [ 17, 20 ], [ 18, 20 ], [ 19, 20 ], [ 20, 20 ], [ 21, 20 ], [ 22, 20 ], [ 24, 20 ], [ 25, 20 ], [ 26, 20 ], [ 27, 20 ], [ 28, 20 ], [ 32, 20 ], [ 33, 20 ], [ 34, 20 ], [ 41, 20 ], [ 42, 20 ], [ 43, 20 ], [ 45, 20 ], [ 44, 20 ], [ 46, 20 ], [ 47, 20 ], [ 49, 20 ], [ 50, 20 ], [ 51, 20 ], [ 52, 20 ], [ 53, 20 ] ],
     "Space Rake": [ [ 18, 5 ], [ 19, 5 ], [ 21, 4 ], [ 20, 4 ], [ 21, 6 ], [ 21, 5 ], [ 22, 5 ], [ 18, 6 ], [ 20, 6 ], [ 19, 6 ], [ 19, 7 ], [ 20, 7 ], [ 26, 5 ], [ 27, 4 ], [ 28, 4 ], [ 29, 4 ], [ 30, 4 ], [ 30, 5 ], [ 30, 6 ], [ 29, 7 ], [ 26, 7 ], [ 17, 9 ], [ 17, 10 ], [ 16, 10 ], [ 15, 11 ], [ 16, 12 ], [ 17, 12 ], [ 18, 12 ], [ 20, 12 ], [ 19, 12 ], [ 17, 13 ], [ 20, 13 ], [ 18, 13 ], [ 19, 13 ], [ 20, 14 ], [ 26, 10 ], [ 27, 10 ], [ 25, 11 ], [ 28, 11 ], [ 28, 12 ], [ 25, 12 ], [ 24, 13 ], [ 25, 13 ], [ 28, 13 ], [ 27, 13 ], [ 26, 14 ], [ 25, 14 ], [ 26, 19 ], [ 27, 18 ], [ 26, 21 ], [ 28, 18 ], [ 29, 18 ], [ 30, 18 ], [ 30, 20 ], [ 30, 19 ], [ 29, 21 ], [ 13, 21 ], [ 13, 20 ], [ 12, 19 ], [ 13, 22 ], [ 12, 22 ], [ 11, 22 ], [ 10, 22 ], [ 9, 21 ], [ 9, 19 ] ]
 };
-
-function drawGrid() {
-    ctx.save();
-    ctx.fillStyle = "gray";
-    const tileWidth = canvas.width / gridWidth;
-    const tileHeight = canvas.height / gridHeight;
-
-    for (let i = 1; i < gridHeight; i++) {
-        ctx.fillRect(0, tileHeight * i, canvas.width, 1);
-    }
-    for (let i = 1; i < gridWidth; i++) {
-        ctx.fillRect(tileWidth * i, 0, 1, canvas.height);
-    }
-    ctx.restore();
-}
-
-function draw() {
-    ctx.fillStyle = "black";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const tileWidth = canvas.width / gridWidth;
-    const tileHeight = canvas.height / gridHeight;
-    for (const point of gol.grid.getAlivePoints()) {
-        if (point.x > 0 && point.x < gridWidth && point.y > 0 && point.y < gridHeight) {
-            ctx.fillRect(tileWidth * point.x, tileHeight * point.y, tileWidth, tileHeight);
-        }
-    }
-
-    drawGrid();
-}
-
 
 
 function canvasPixelsToGridCoords(x, y) {
@@ -237,37 +199,94 @@ canvas.addEventListener("click", (e) => {
     draw();
 });
 
-function step() {
-    gol.update();
-    draw();
-}
-function runAnimation() {
-    if (!isPlaying) {
-        return;
+class GridView {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
     }
-    step();
-}
-setInterval(runAnimation, 10);
 
-function next() { step(); }
-function play() {
-    isPlaying = true;
+    drawGrid() {
+        this.ctx.save();
+        this.ctx.fillStyle = "gray";
+        const tileWidth = canvas.width / gridWidth;
+        const tileHeight = canvas.height / gridHeight;
+
+        for (let i = 1; i < gridHeight; i++) {
+            this.ctx.fillRect(0, tileHeight * i, canvas.width, 1);
+        }
+        for (let i = 1; i < gridWidth; i++) {
+            this.ctx.fillRect(tileWidth * i, 0, 1, canvas.height);
+        }
+        this.ctx.restore();
+    }
+
+    draw(gol) {
+        this.ctx.fillStyle = "black";
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+
+        const tileWidth = canvas.width / gridWidth;
+        const tileHeight = canvas.height / gridHeight;
+        for (const point of gol.grid.getAlivePoints()) {
+            if (point.x > 0 && point.x < gridWidth && point.y > 0 && point.y < gridHeight) {
+                this.ctx.fillRect(tileWidth * point.x, tileHeight * point.y, tileWidth, tileHeight);
+            }
+        }
+
+        this.drawGrid();
+    }
 }
-function pause() {
-    isPlaying = false;
+
+
+class Controller {
+    constructor(gol, view) {
+        this.gol = gol;
+        this.view = view;
+        this.isPlaying = false;
+    }
+
+    draw() {
+        this.view.draw(this.gol);
+    }
+
+    step() {
+        this.gol.update();
+        this.draw();
+    }
+
+    runAnimation() {
+        if (!this.isPlaying) {
+            return;
+        }
+        this.step();
+    }
+
+    play() { this.isPlaying = true; }
+    pause() { this.isPlaying = false; }
 }
+
+ctrl = new Controller(
+    new GameOfLife(),
+    new GridView(canvas)
+);
+
+setInterval(() => ctrl.runAnimation(), 10);
+
+const next = () => ctrl.step();
+const play = () => ctrl.play();
+const pause = () => ctrl.pause();
+
 function selectStart() {
     const name = select.value;
     pause();
 
-    gol.grid.clear();
+    ctrl.gol.grid.clear();
     let points = [];
     for (const coords of startingOptions[name]) {
         points.push(new Point(coords[0], coords[1]));
     }
-    gol.addAlivePoints(points);
+    ctrl.gol.addAlivePoints(points);
 
-    draw();
+    ctrl.draw();
 }
 
 // Create the list of options and load button
@@ -278,7 +297,7 @@ for (const name in startingOptions) {
     select.appendChild(opt);
 }
 
-draw();
+ctrl.draw();
 
 // Set up for flier
 select.value = "Gosper glider gun";
