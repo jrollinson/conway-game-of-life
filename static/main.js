@@ -33,23 +33,31 @@ class GameOfLife {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.aliveTiles = [];
+        this.aliveTilesMap = new Map();
     }
 
     clear() {
-        this.aliveTiles = [];
-    }
-
-    getIsAlivePointIndex(point) {
-        return this.aliveTiles.find(elem => this.eq(elem, point));
+        this.aliveTilesMap.clear();
     }
 
     getAlivePoints() {
-        return Array.from(this.aliveTiles);
+        const result = [];
+        for (const entry of this.aliveTilesMap.entries()) {
+            const x = entry[0];
+            const row = entry[1];
+            for (const y of row.values()) {
+                result.push(new Point(x, y));
+            }
+        }
+        return result;
     }
 
     isAlive(point) {
-        return this.getIsAlivePointIndex(point) !== undefined;
+        const row = this.aliveTilesMap.get(point.x);
+        return (
+            row !== undefined &&
+            row.has(point.y)
+        );
     }
 
     eq(pointa, pointb) {
@@ -57,15 +65,16 @@ class GameOfLife {
     }
 
     setState(point, isAlive) {
-        const index = this.getIsAlivePointIndex(point);
-        if ((index !== undefined) === isAlive) {
-            return;
+        let row = this.aliveTilesMap.get(point.x);
+        if (row === undefined) {
+            row = new Set();
+            this.aliveTilesMap.set(point.x, row);
         }
 
         if (isAlive) {
-            this.aliveTiles.push(point);
+            row.add(point.y);
         } else {
-            this.aliveTiles = this.aliveTiles.filter(item => !this.eq(item, point));
+            row.delete(point.y);
         }
     }
 
@@ -132,7 +141,9 @@ function draw() {
     const tileWidth = canvas.width / gridWidth;
     const tileHeight = canvas.height / gridHeight;
     for (const point of gol.getAlivePoints()) {
-        ctx.fillRect(tileWidth * point.x, tileHeight * point.y, tileWidth, tileHeight);
+        if (point.x > 0 && point.x < gridWidth && point.y > 0 && point.y < gridHeight) {
+            ctx.fillRect(tileWidth * point.x, tileHeight * point.y, tileWidth, tileHeight);
+        }
     }
 
     drawGrid();
