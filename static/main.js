@@ -45,7 +45,7 @@ class Grid {
     }
 
     /** Sets a group of pixels in a given column as alive. */
-    setAliveInColumn(x, ys) {
+    addAliveInColumn(x, ys) {
         let row = this.tiles.get(x);
         if (row === undefined) {
             row = new Set();
@@ -154,9 +154,9 @@ class GameOfLife {
                 ysToCheck.add(y+1);
             }
 
-            toCheck.setAliveInColumn(x-1, ysToCheck);
-            toCheck.setAliveInColumn(x, ysToCheck);
-            toCheck.setAliveInColumn(x+1, ysToCheck);
+            toCheck.addAliveInColumn(x-1, ysToCheck);
+            toCheck.addAliveInColumn(x, ysToCheck);
+            toCheck.addAliveInColumn(x+1, ysToCheck);
         }
 
         // Onces we have the points to check, we need to iterate
@@ -220,7 +220,7 @@ class GameOfLife {
                     updatedAliveYs.add(y);
                 }
             }
-            newGrid.setAliveInColumn(x, updatedAliveYs);
+            newGrid.tiles.set(x, updatedAliveYs);
         }
         this.grid = newGrid;
     }
