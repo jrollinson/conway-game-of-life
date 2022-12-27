@@ -101,6 +101,14 @@ class Grid {
         }
         return count;
     }
+
+    numAlive() {
+        let count = 0;
+        for (const col of this.tiles.values()) {
+            count += col.size;
+        }
+        return count;
+    }
 }
 
 /** Code to support game of life */
@@ -132,35 +140,48 @@ class GameOfLife {
 
     /** Performs a step. */
     update() {
-        const grid = new Grid();
+        // This grid is used to track which tiles should be checked.
+        const toCheck = new Grid();
         for (const entry of this.grid.tiles.entries()) {
             const x = entry[0];
             const ys = entry[1];
 
             const ysToCheck = new Set();
+
             for (const y of ys) {
                 ysToCheck.add(y-1);
                 ysToCheck.add(y);
                 ysToCheck.add(y+1);
             }
 
-            grid.setAliveInColumn(x-1, ysToCheck);
-            grid.setAliveInColumn(x, ysToCheck);
-            grid.setAliveInColumn(x+1, ysToCheck);
+            toCheck.setAliveInColumn(x-1, ysToCheck);
+            toCheck.setAliveInColumn(x, ysToCheck);
+            toCheck.setAliveInColumn(x+1, ysToCheck);
         }
-        
+
+        // Onces we have the points to check, we need to iterate
+        // through them all and see whether they should be alive.
         const newGrid = new Grid();
-        for (const point of grid.getAlivePoints()) {
-            const numAliveNeighbors = this.numAliveNeighbors(point);
-            let aliveNext;
-            if (this.grid.isAlive(point)) {
-                aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
-            } else {
-                aliveNext = numAliveNeighbors == 3;
+        for (const entry of toCheck.tiles.entries()) {
+            const x = entry[0];
+            const ys = entry[1];
+
+            const aliveYs = new Set();
+            for (const y of ys) {
+                const point = new Point(x, y);
+
+                const numAliveNeighbors = this.numAliveNeighbors(point);
+                let aliveNext;
+                if (this.grid.isAlive(point)) {
+                    aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
+                } else {
+                    aliveNext = numAliveNeighbors == 3;
+                }
+                if (aliveNext) {
+                    aliveYs.add(y);
+                }
             }
-            if (aliveNext) {
-                newGrid.setState(point, true);
-            }
+            newGrid.setAliveInColumn(x, aliveYs);
         }
         this.grid = newGrid;
     }
