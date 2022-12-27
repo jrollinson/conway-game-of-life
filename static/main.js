@@ -164,24 +164,63 @@ class GameOfLife {
         const newGrid = new Grid();
         for (const entry of toCheck.tiles.entries()) {
             const x = entry[0];
-            const ys = entry[1];
+            const ysToCheck = entry[1];
 
-            const aliveYs = new Set();
-            for (const y of ys) {
-                const point = new Point(x, y);
+            let ysAlive = this.grid.tiles.get(x);
+            if (ysAlive === undefined) {
+                ysAlive = new Set();
+            }
+            let ysAliveLeft = this.grid.tiles.get(x-1);
+            if (ysAliveLeft === undefined) {
+                ysAliveLeft = new Set();
+            }
+            let ysAliveRight = this.grid.tiles.get(x+1);
+            if (ysAliveRight === undefined) {
+                ysAliveRight = new Set();
+            }
 
-                const numAliveNeighbors = this.numAliveNeighbors(point);
+            const updatedAliveYs = new Set();
+            for(const y of ysToCheck) {
+                let numAliveNeighbors = 0;
+                if (ysAlive.has(y-1)) {
+                    numAliveNeighbors += 1;
+                }
+                if (ysAlive.has(y+1)) {
+                    numAliveNeighbors += 1;
+                }
+
+                if (ysAliveRight.has(y-1)) {
+                    numAliveNeighbors += 1;
+                }
+                if (ysAliveRight.has(y)) {
+                    numAliveNeighbors += 1;
+                }
+                if (ysAliveRight.has(y+1)) {
+                    numAliveNeighbors += 1;
+                }
+
+                if (ysAliveLeft.has(y-1)) {
+                    numAliveNeighbors += 1;
+                }
+                if (ysAliveLeft.has(y)) {
+                    numAliveNeighbors += 1;
+                }
+                if (ysAliveLeft.has(y+1)) {
+                    numAliveNeighbors += 1;
+                }
+
                 let aliveNext;
-                if (this.grid.isAlive(point)) {
+                if (ysAlive.has(y)) {
                     aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
                 } else {
                     aliveNext = numAliveNeighbors == 3;
                 }
+
                 if (aliveNext) {
-                    aliveYs.add(y);
+                    updatedAliveYs.add(y);
                 }
             }
-            newGrid.setAliveInColumn(x, aliveYs);
+            newGrid.setAliveInColumn(x, updatedAliveYs);
         }
         this.grid = newGrid;
     }
