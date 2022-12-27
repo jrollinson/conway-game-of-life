@@ -167,50 +167,41 @@ class GameOfLife {
             const ysToCheck = entry[1];
 
             let ysAlive = this.grid.tiles.get(x);
-            if (ysAlive === undefined) {
-                ysAlive = new Set();
-            }
             let ysAliveLeft = this.grid.tiles.get(x-1);
-            if (ysAliveLeft === undefined) {
-                ysAliveLeft = new Set();
-            }
             let ysAliveRight = this.grid.tiles.get(x+1);
-            if (ysAliveRight === undefined) {
-                ysAliveRight = new Set();
-            }
 
             const updatedAliveYs = new Set();
             for(const y of ysToCheck) {
                 let numAliveNeighbors = 0;
-                if (ysAlive.has(y-1)) {
+                if (ysAlive !== undefined && ysAlive.has(y-1)) {
                     numAliveNeighbors += 1;
                 }
-                if (ysAlive.has(y+1)) {
-                    numAliveNeighbors += 1;
-                }
-
-                if (ysAliveRight.has(y-1)) {
-                    numAliveNeighbors += 1;
-                }
-                if (ysAliveRight.has(y)) {
-                    numAliveNeighbors += 1;
-                }
-                if (ysAliveRight.has(y+1)) {
+                if (ysAlive !== undefined && ysAlive.has(y+1)) {
                     numAliveNeighbors += 1;
                 }
 
-                if (ysAliveLeft.has(y-1)) {
+                if (ysAliveRight !== undefined && ysAliveRight.has(y-1)) {
                     numAliveNeighbors += 1;
                 }
-                if (ysAliveLeft.has(y)) {
+                if (ysAliveRight !== undefined && ysAliveRight.has(y)) {
                     numAliveNeighbors += 1;
                 }
-                if (ysAliveLeft.has(y+1)) {
+                if (ysAliveRight !== undefined && ysAliveRight.has(y+1)) {
+                    numAliveNeighbors += 1;
+                }
+
+                if (ysAliveLeft !== undefined && ysAliveLeft.has(y-1)) {
+                    numAliveNeighbors += 1;
+                }
+                if (ysAliveLeft !== undefined && ysAliveLeft.has(y)) {
+                    numAliveNeighbors += 1;
+                }
+                if (ysAliveLeft !== undefined && ysAliveLeft.has(y+1)) {
                     numAliveNeighbors += 1;
                 }
 
                 let aliveNext;
-                if (ysAlive.has(y)) {
+                if (ysAlive !== undefined && ysAlive.has(y)) {
                     aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
                 } else {
                     aliveNext = numAliveNeighbors == 3;
