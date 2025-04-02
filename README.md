@@ -4,7 +4,7 @@ A web-based implementation of John Conway's Game of Life, created primarily as a
 
 ## Live Demo
 
-You can try the simulation live at: [http://conway.josephrollinson.com](http://conway.josephrollinson.com)
+You can try the simulation live at: [https://conway.josephrollinson.com](https://conway.josephrollinson.com)
 
 ## Features
 
