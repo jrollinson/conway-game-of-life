@@ -31,29 +31,16 @@ class Grid {
 
     /** Sets the state of one pixel. */
     setState(point, isAlive) {
-        let row = this.tiles.get(point.x);
-        if (row === undefined) {
-            row = new Set();
-            this.tiles.set(point.x, row);
+        let rowMap = this.tiles.get(point.x);
+        if (rowMap === undefined) {
+            rowMap = new Map();
+            this.tiles.set(point.x, rowMap);
         }
 
         if (isAlive) {
-            row.add(point.y);
+            rowMap.set(point.y, true);
         } else {
-            row.delete(point.y);
-        }
-    }
-
-    /** Sets a group of pixels in a given column as alive. */
-    addAliveInColumn(x, ys) {
-        let row = this.tiles.get(x);
-        if (row === undefined) {
-            row = new Set();
-            this.tiles.set(x, row);
-        }
-
-        for (const y of ys) {
-            row.add(y);
+            rowMap.delete(point.y);
         }
     }
 
@@ -67,9 +54,12 @@ class Grid {
         const result = [];
         for (const entry of this.tiles.entries()) {
             const x = entry[0];
-            const row = entry[1];
-            for (const y of row.values()) {
-                result.push(new Point(x, y));
+            const rowMap = entry[1];
+            for (const rowEntry of rowMap.entries()) {
+                if (rowEntry[1]) {
+                    const y = rowEntry[0];
+                    result.push(new Point(x, y));
+                }
             }
         }
         return result;
@@ -77,10 +67,10 @@ class Grid {
 
     /** Returns whether the given pixel is alive. */
     isAlive(point) {
-        const row = this.tiles.get(point.x);
+        const rowMap = this.tiles.get(point.x);
         return (
-            row !== undefined &&
-            row.has(point.y)
+            rowMap !== undefined &&
+            rowMap.get(point.y)
         );
     }
     
@@ -88,24 +78,16 @@ class Grid {
      * column that match the y-coordinates that are alive.
      */
     numAliveInColumn(x, ys) {
-        const row = this.tiles.get(x);
-        if (row === undefined) {
+        const rowMap = this.tiles.get(x);
+        if (rowMap === undefined) {
             return 0;
         }
 
         let count = 0;
         for (let y of ys) {
-            if (row.has(y)) {
+            if (rowMap.get(y)) {
                 count += 1;
             }
-        }
-        return count;
-    }
-
-    numAlive() {
-        let count = 0;
-        for (const col of this.tiles.values()) {
-            count += col.size;
         }
         return count;
     }
@@ -140,78 +122,38 @@ class GameOfLife {
 
     /** Performs a step. */
     update() {
+        const newGrid = new Grid();
         // This grid is used to track which tiles should be checked.
-        const toCheck = new Grid();
+        const checkedPoints = new Grid();
+
         for (const entry of this.grid.tiles.entries()) {
             const x = entry[0];
-            const ys = entry[1];
-
-            const ysToCheck = new Set();
-
-            for (const y of ys) {
-                ysToCheck.add(y-1);
-                ysToCheck.add(y);
-                ysToCheck.add(y+1);
-            }
-
-            toCheck.addAliveInColumn(x-1, ysToCheck);
-            toCheck.addAliveInColumn(x, ysToCheck);
-            toCheck.addAliveInColumn(x+1, ysToCheck);
-        }
-
-        // Onces we have the points to check, we need to iterate
-        // through them all and see whether they should be alive.
-        const newGrid = new Grid();
-        for (const entry of toCheck.tiles.entries()) {
-            const x = entry[0];
-            const ysToCheck = entry[1];
-
-            let ysAlive = this.grid.tiles.get(x);
-            let ysAliveLeft = this.grid.tiles.get(x-1);
-            let ysAliveRight = this.grid.tiles.get(x+1);
-
-            const updatedAliveYs = new Set();
-            for(const y of ysToCheck) {
-                let numAliveNeighbors = 0;
-                if (ysAlive !== undefined && ysAlive.has(y-1)) {
-                    numAliveNeighbors += 1;
-                }
-                if (ysAlive !== undefined && ysAlive.has(y+1)) {
-                    numAliveNeighbors += 1;
+            const yMap = entry[1];
+            for (const yEntry of yMap.entries()) {
+                const y = yEntry[0];
+                if (!yEntry[1]) {
+                    continue;
                 }
 
-                if (ysAliveRight !== undefined && ysAliveRight.has(y-1)) {
-                    numAliveNeighbors += 1;
-                }
-                if (ysAliveRight !== undefined && ysAliveRight.has(y)) {
-                    numAliveNeighbors += 1;
-                }
-                if (ysAliveRight !== undefined && ysAliveRight.has(y+1)) {
-                    numAliveNeighbors += 1;
-                }
+                for (const dx of [-1, 0, 1]) {
+                    for (const dy of [-1, 0, 1]) {
+                        const pointToCheck = new Point(x + dx, y + dy);
+                        if (checkedPoints.isAlive(pointToCheck)) { continue; }
+                        checkedPoints.setState(pointToCheck, true);
 
-                if (ysAliveLeft !== undefined && ysAliveLeft.has(y-1)) {
-                    numAliveNeighbors += 1;
-                }
-                if (ysAliveLeft !== undefined && ysAliveLeft.has(y)) {
-                    numAliveNeighbors += 1;
-                }
-                if (ysAliveLeft !== undefined && ysAliveLeft.has(y+1)) {
-                    numAliveNeighbors += 1;
-                }
+                        const numAliveNeighbors = this.numAliveNeighbors(pointToCheck);
+                        const wasAlive = this.grid.isAlive(pointToCheck);
 
-                let aliveNext;
-                if (ysAlive !== undefined && ysAlive.has(y)) {
-                    aliveNext = numAliveNeighbors == 2 || numAliveNeighbors == 3;
-                } else {
-                    aliveNext = numAliveNeighbors == 3;
-                }
-
-                if (aliveNext) {
-                    updatedAliveYs.add(y);
+                        const isAlive = (
+                            (wasAlive && (numAliveNeighbors <= 3 && numAliveNeighbors >= 2)) ||
+                            (!wasAlive && (numAliveNeighbors === 3))
+                        )
+                        if (isAlive) {
+                            newGrid.setState(pointToCheck, true);
+                        }
+                    }
                 }
             }
-            newGrid.tiles.set(x, updatedAliveYs);
         }
         this.grid = newGrid;
     }
